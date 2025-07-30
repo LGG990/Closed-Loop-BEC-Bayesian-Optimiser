@@ -1,6 +1,6 @@
 """
 Program to optimize parameters for a Bose-Einstein Condensate (BEC) experiment using Bayesian optimization.
-This script defines an objective function to score the BEC based on various parameters, then uses the `skopt`
+This script defines an objective function to score the atom cloud/ BEC based on input parameters, then uses the `skopt`
 library to perform Bayesian optimization over a defined search space of hyperparameters.
 
 
@@ -16,19 +16,13 @@ from skopt import gp_minimize
 
 
 #Build objective function to score the BEC
-def bec_score(condensate_fraction, otical_depth, temperature, num_atoms, ellipticity, width, positionx, positiony):
+def cloud_score(temp, num_atoms):
     """
     Calculate the BEC score based on the given parameters.
     
     Parameters:
-    condensate_fraction (float): Fraction of atoms in the condensate.
-    otical_depth (float): Optical depth of the system.
     temperature (float): Temperature of the system in Kelvin.
     num_atoms (int): Total number of atoms in the system.
-    ellipticity (float): Ellipticity of the condensate.
-    width (float): Width of the condensate.
-    positionx (float): X position of the condensate. (optional)
-    positiony (float): Y position of the condensate. (optional)
 
     Returns:
     float: Calculated BEC score.
@@ -46,12 +40,11 @@ def bec_score(condensate_fraction, otical_depth, temperature, num_atoms, ellipti
     #    0.5 * np.log10(r["atom_number"]) -
     #    5.0 * (r["temperature"] * 1e9)  # scale to nK
     # )
-    return ()
+    return (-np.log(num_atoms)+temp)
 
 def get_experiment_results():
     # This function should retrieve the results from the image analysis.
-    #grab results from the sequencer or API, this is a placeholder function
-
+    #wait for signal that the sequence is finished then retrieve the results from the analysis code
     return()# return(resuling paramters from the experiment) 
 
 def send_to_sequence(parameters):
@@ -84,8 +77,7 @@ def run_experiment(tof, parameter2, parameter3, parameter4):
 
     results = get_experiment_results()  #retrieve the results from the sequencer
 
-
-    return (-bec_score(results))  # Replace with actual implementation
+    return (-cloud_score(results))  # Replace with actual implementation
 
 
 #Define the search space for the hyperparameters
@@ -95,13 +87,13 @@ param_space = [
     #Real(*number*,*number*, name='parameter_name'),
     #or
     #integer(*number*,*number*, name='parameter_name')]
-    #The Real() function is for continuous parameters, while Integer() is for discrete parameters.
+    #The Real() function is for continuous parameters, while Integer() is for discrete parameters, func(upper bound, lower bound).
     #this is from scikit-optimize, which is a library for Bayesian optimization.
     
     #example parameters
-    Real(0.1, 3.0, name='tof'),                  # Time-of-flight in ms
+    Real(0.1, 3.0, name=''),                     # Time-of-flight in ms
     Real(0.0, 1.0, name=''),                     # 
-    Real(100.0, 400.0, name=''),                    # in MHz
+    Real(100.0, 400.0, name=''),                 # in MHz
     Real(5.0, 25.0, name=''),                    # evaporation ramp time is ms
 ]
 
@@ -116,7 +108,7 @@ res = gp_minimize(
 )
 
 print("Best parameters found: ")
-for name, val in zip(['tof', 'parameter2', 'parameter3', 'parameter4'], res.x):
+for name, val in zip(param_space, res.x):
     print(f"{name}: {val}")
 
 
