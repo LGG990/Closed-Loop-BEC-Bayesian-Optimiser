@@ -7,13 +7,48 @@ library to perform Bayesian optimization over a defined search space of hyperpar
 
 NOTE: need to remove the random_state=42 line for production use, this is only for debugging purposes!
 """
-
-
-
 import numpy as np
 from skopt.space import Real, Integer
 from skopt import gp_minimize
+import codecs
+import re
 
+#extract image analysis from txt file
+def get_experiment_results(filename):
+     # This function should retrieve the results from the image analysis.
+    #wait for signal that the sequence is finished then retrieve the results from the analysis code 
+    with codecs.open(filename, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    T_val = None
+    N_val = None
+
+    for line in lines:
+        line = line.strip()
+
+        if line.startswith("T :"):
+            # Extract number after "T :" using regex
+            match = re.search(r"T\s*:\s*([\d\.]+)", line)
+            if match:
+                T_val = match.group(1)
+
+        elif line.startswith("N :"):
+            match = re.search(r"N\s*:\s*([\d\.]+)", line)
+            if match:
+                N_val = match.group(1)
+
+    if T_val:
+        print(float(T_val)*0.000001)
+    else:
+        print("T value not found.")
+
+    if N_val:
+        print(float(N_val)*1000)
+    else:
+        print("N value not found.")
+
+    return(float(T_val)*0.000001, float(N_val)*1000)  # Return temperature in Kelvin and number of atoms
+  
 
 #Build objective function to score the BEC
 def cloud_score(temp, num_atoms):
@@ -41,11 +76,7 @@ def cloud_score(temp, num_atoms):
     #    5.0 * (r["temperature"] * 1e9)  # scale to nK
     # )
     return (-np.log(num_atoms)+temp)
-
-def get_experiment_results():
-    # This function should retrieve the results from the image analysis.
-    #wait for signal that the sequence is finished then retrieve the results from the analysis code
-    return()# return(resuling paramters from the experiment) 
+   
 
 def send_to_sequence(parameters):
     """
@@ -75,7 +106,7 @@ def run_experiment(tof, parameter2, parameter3, parameter4):
 
     })
 
-    results = get_experiment_results()  #retrieve the results from the sequencer
+    results = get_experiment_results("output.txt")  #retrieve the results from the sequencer
 
     return (-cloud_score(results))  # Replace with actual implementation
 
