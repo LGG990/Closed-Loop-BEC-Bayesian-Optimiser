@@ -75,7 +75,12 @@ def cloud_score(temp, num_atoms):
     #    0.5 * np.log10(r["atom_number"]) -
     #    5.0 * (r["temperature"] * 1e9)  # scale to nK
     # )
-    return (-np.log(num_atoms)+temp)
+     10000
+     0.000000010
+
+
+     score = (temp*1e8) - (num_atoms/10000)     
+     return (score)
    
 
 def send_to_sequence(parameters):
